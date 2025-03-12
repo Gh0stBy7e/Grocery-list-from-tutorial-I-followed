@@ -3,7 +3,6 @@ package com.browserui.randomahheinkaufsliste
 import android.content.Context
 import android.os.Bundle
 import android.text.InputType
-import android.widget.AdapterView.OnItemLongClickListener
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.ListView
@@ -35,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shopitems: ArrayList<String>
     private lateinit var itemAdapter: ArrayAdapter<String>
 
-    private val SHOPPING_LIST_KEY = stringPreferencesKey("shopping_list_items")
+    private val shoplistkey = stringPreferencesKey("shopping_list_items")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,24 +58,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        lvtodoList.setOnItemLongClickListener(OnItemLongClickListener { arg0, arg1, pos, id ->
+        lvtodoList.setOnItemLongClickListener { _, _, pos, _ ->
             shopitems.removeAt(pos)
             itemAdapter.notifyDataSetChanged()
             saveList(shopitems) // Save the list after removing an item
             Toast.makeText(applicationContext, "Item removed from list.", Toast.LENGTH_SHORT).show()
             true
-        })
+        }
 
         fab.setOnClickListener {
             val builder = AlertDialog.Builder(this)
             builder.setTitle("Add Item")
 
-            var input = EditText(this)
+            val input = EditText(this)
             input.hint = "Enter Item"
             input.inputType = InputType.TYPE_CLASS_TEXT
             builder.setView(input)
 
-            builder.setPositiveButton("Add") { dialog, which ->
+            builder.setPositiveButton("Add") { _, _ ->
                 val item = input.text.toString()
                 shopitems.add(item)
                 itemAdapter.notifyDataSetChanged()
@@ -84,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, "Item added to list.", Toast.LENGTH_SHORT).show()
             }
 
-            builder.setNegativeButton("Cancel") { dialog, which ->
+            builder.setNegativeButton("Cancel") { _, _ ->
                 Toast.makeText(applicationContext, "Canceled", Toast.LENGTH_SHORT).show()
             }
 
@@ -97,14 +96,14 @@ class MainActivity : AppCompatActivity() {
             val jsonString = Json.encodeToString(list)
             // Correct: Use dataStore directly (it's now a top-level property)
             dataStore.edit { preferences ->
-                preferences[SHOPPING_LIST_KEY] = jsonString
+                preferences[shoplistkey] = jsonString
             }
         }
     }
 
     private fun loadList(): Flow<List<String>> {
         return dataStore.data.map { preferences ->
-            val jsonString = preferences[SHOPPING_LIST_KEY] ?: "[]" // Default to empty list
+            val jsonString = preferences[shoplistkey] ?: "[]" // Default to empty list
             Json.decodeFromString<List<String>>(jsonString)
         }
     }
